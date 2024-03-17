@@ -1,0 +1,92 @@
+# Playbook File to Install Log Monitoring Tool
+
+- hosts: all
+  become: true
+  tasks:
+
+  # Import Required Packages
+  - name: Install Packages of Elastic Stack (Log Monitoring Tools)
+    apt:
+      name:
+        - default-jre
+        - curl
+        - apt-transport-https
+        - software-properties-common
+      state: present
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Import Repository Key
+    apt_key:
+      url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Import Elastic Stack Installation Repository
+    apt_repository:
+      repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
+      state: present
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  # Install Elastic Stack
+
+  - name: Install Elastic Stack
+    apt:
+      name: elasticsearch
+      state: present
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Enable Elastic Stack Log Monitoring Tool
+    systemd:
+      name: elasticsearch
+      enabled: yes
+      state: started
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  # Install Kibana
+
+  - name: Install Kibana
+    apt:
+      name: kibana
+      state: present
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Enable Kibana Service
+    systemd:
+      name: kibana
+      enabled: yes
+      state: started
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  # Install Logstash
+
+  - name: Install Logstash
+    apt:
+      name: logstash
+      state: present
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Enable Logstash Service
+    systemd:
+      name: logstash
+      enabled: yes
+      state: started
+    become: yes
+    when: ansible_distribution == "Ubuntu"
+
+  # Restart Services
+
+  - name: Restart Elasticsearch and Kibana
+    systemd:
+      name: "{{ item }}"
+      state: restarted
+    loop:
+      - elasticsearch
+      - kibana
+    when: ansible_distribution == "Ubuntu"
